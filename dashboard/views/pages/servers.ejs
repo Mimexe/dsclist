@@ -1,0 +1,70 @@
+<%- include('../partials/header', {title: 'Serveurs'}) -%>
+<div class="px-4 py-5 my-5 text-center">
+  <img class="d-block mx-auto mb-4" src="/logo.png" alt="">
+  <h1 class="display-5 fw-bold"><b style="color: blue;">Serv</b>eurs</h1>
+  <div class="col-lg-6 mx-auto">
+    <p class="lead mb-4">Voici tout les serveurs ajouté sur le site !</p
+  </div>
+</div>
+<hr />
+<div>
+<h1>Serveurs mis en avant</h1>
+<small>Utiliser la commande /bump sur votre serveur.</small>
+</div>
+<hr />
+<% for(const server of bumped.sort((a,b) =>  b.bump_date - a.bump_date)) { %>
+<div style="display: inline-block;">
+<div class="card" style="width: 18rem;">
+  <% if (bumped.indexOf(server)== 0) { %>
+  <span class="badge bg-success">PLUS RÉCENT</span>
+  <% } %>
+  <img src="<%= bot.guilds.cache.get(server.id).iconURL() %>" class="card-img-top" alt="...">
+  
+  <div class="card-body">
+  
+    <h5 class="card-title"><%= server.name %></h5>
+    <p class="card-text"><%= server.description %>.</p>
+    <form action="/like/<%= server.id %>" method="post">
+      <button type="submit" class="btn btn-success">J'aime: <%= server.likes %></button>
+    </form>
+    <a href="/server/<%= server.code %>" class="btn btn-primary">Rejoindre</a>
+  </div>
+</div>
+</div>
+<% } %>
+<hr />
+<div>
+<h1>Serveurs ajoutés</h1>
+<small>Ajouter votre serveur <a href="/servers/add">ici</a>.</small>
+</div>
+<hr />
+<% for(const server of servers.sort((a,b) => b.likes - a.likes)) { %>
+<div style="display: inline-block;">
+<div class="card" style="width: 18rem;">
+  <img src="<%= bot.guilds.cache.get(server.id).iconURL() %>" class="card-img-top" alt="...">
+  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+    <%= server.views %> VUES
+    <span class="visually-hidden">vues</span>
+  </span>
+  <div class="card-body">
+  <% if (bumped.includes(server) && bumped.indexOf(server) === 0) { %>
+  <span class="badge bg-success">BUMP RÉCENT</span>
+  <% } %>
+    <h5 class="card-title"><%= server.name %></h5>
+    <p class="card-text"><%= server.description %>.</p>
+    <form action="/like/<%= server.id %>" method="post">
+      <button type="submit" class="btn btn-success">J'aime: <%= server.likes %></button>
+    </form>
+    <a href="/server/<%= server.code %>" class="btn btn-primary">Rejoindre</a>
+  </div>
+</div>
+</div>
+<% } %>
+<script>
+  window.onload = function() {
+    Toastify({
+      text: "Il y a actuellement <%= servers.length %> serveurs sur le site !",
+    }).showToast()
+  }
+</script>
+<%- include('../partials/footer') -%>

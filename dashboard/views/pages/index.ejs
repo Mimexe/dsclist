@@ -1,0 +1,14 @@
+<%- include('../partials/header', {title: 'Accueil'}) -%>
+<div class="px-4 py-5 my-5 text-center">
+  <img class="d-block mx-auto mb-4" src="/logo.png" alt="">
+  <h1 class="display-5 fw-bold"><b style="color: blue;">DSC</b>List</h1>
+  <div class="col-lg-6 mx-auto">
+    <p class="lead mb-4">Référencé ses serveurs gratuitement et facilement, c'est possible avec DSCList.</p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+      <a class="btn btn-primary btn-lg px-4 gap-3" href="<%= user ? '/servers/add' :'/login' %>"><%= user ? 'Commencer' :'Se connecter' %></a>
+      <a class="btn btn-outline-secondary btn-lg px-4" href="/servers">Découvrir des serveurs</a>
+      
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer') -%>

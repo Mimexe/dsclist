@@ -1,0 +1,32 @@
+<div class="container">
+  <footer class="footer d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+    <div class="col-md-4 d-flex align-items-center">
+      <a href="/" class="mb-3 me-2 mb-md-0 text-muted text-decoration-none lh-1">
+        <svg class="bi" width="30" height="24">
+          <use xlink:href="#bootstrap" />
+        </svg>
+      </a>
+      <span class="mb-3 mb-md-0 text-muted">&copy; 2022 DscList</span>
+    </div>
+  </footer>
+</div>
+<!-- Bootstrap core JavaScript-->
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.8.0/chart.js" integrity="sha512-5m2r+g00HDHnhXQDbRLAfZBwPpPCaK+wPLV6lm8VQ+09ilGdHfXV7IVyKPkLOTfi4vTTUVJnz7ELs7cA87/GMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+<% if (salert) { %>
+Toastify({text: "<%= salert %>", gravity: "bottom", style: {background: "linear-gradient(to right, #00b09b, #96c93d)",duration: 1e3}}).showToast()
+<% } %>
+  <% if (ealert) { %>
+  Toastify({text: "<%= ealert %>", gravity: "bottom", style: {background: "linear-gradient(to right, #ff0000, #ff6161)",duration: 1e3}}).showToast()
+  <% } %>
+<% if (salert || ealert) { %>
+setTimeout((function() {
+  location.href = location.href.split("?")[0];
+}), 4000);
+<% } %>
+</script>
+</body>
+</html>

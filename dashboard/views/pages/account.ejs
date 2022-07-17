@@ -1,0 +1,14 @@
+<%- include('../partials/header.ejs', {title: 'Compte'}) %>
+<div class="px-4 py-5 my-5 text-center">
+  <img class="d-block mx-auto mb-4" src="https://cdn.discordapp.com/avatars/<%= user.id %>/<%= user.avatar %>.png" alt="">
+  <h1 class="display-5 fw-bold"><b style="color: blue;"><%= user.username %></b>#<%= user.discriminator %></h1>
+  <div class="col-lg-6 mx-auto">
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+      <a class="btn btn-danger btn-lg px-4 gap-3" href="/logout">Se déconnecter</a>
+      <% if (user.admin) { %>
+      <a class="btn btn-success btn-lg px-4 gap-3" href="/admin">Panneau Administrateur</a>
+      <% } %>
+    </div>
+  </div>
+</div>
+<%- include('../partials/footer.ejs') %>

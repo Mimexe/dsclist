@@ -1,0 +1,36 @@
+<%- include('../partials/header', {title: '404'}) -%>
+<div class="px-4 py-5 my-5 text-center">
+  <img class="d-block mx-auto mb-4" src="/logo.png" alt="">
+  <h1 class="display-5 fw-bold"><b style="color: red;">404</b> Page introuvable</h1>
+  <div class="col-lg-6 mx-auto">
+    <p class="lead mb-4">La page que vous recherchez a peut-être été supprimée, son nom a été modifié ou elle est temporairement indisponible.</p>
+    <div class="d-grid gap-2 d-sm-flex justify-content-sm-center">
+      <a class="btn btn-primary btn-lg px-4 gap-3" href="/">Accueil</a>
+      <button id="retour" class="btn btn-outline-secondary btn-lg px-4" onclick="history.back()">Retour</a>
+    </div>
+  </div>
+</div>
+<script>
+window.onload = function() {
+  const retour = document.getElementById('retour');
+  if(history.length == 1) {
+    retour.disabled = true
+    Toastify({
+        text: "Retour impossible, aucune entrée dans l'historique",
+        close: true,
+        duration: 2e3,
+        offset: {
+            x: 700,
+            y: 300
+        },
+        onClick: () => {
+            location.href = "/"
+        },
+        style: {
+            background: "linear-gradient(to right, #ff0000, #ff5555)",
+        }}
+    ).showToast()
+  }
+}
+</script>
+<%- include('../partials/footer') -%>

@@ -1,0 +1,38 @@
+<%- include('../../partials/header', {title: 'Ajouter un serveur'}) -%>
+<form method="post" action="/servers/add">
+   <select class="form-control form-control-lg" name="server">
+     <% for(const guild of user.guilds.values()) { %>
+     <% for(const BotGuild of bot.guilds.cache.values()) { %>
+         <% if(BotGuild.id === guild.id) { %>
+         <% if (BotGuild.ownerId === user.id) { %>
+         <option value="<%= guild.id %>"><%= guild.name %></option>
+         <% } %>
+         <% } %>
+         <% } %>
+     <% } %>
+   </select>
+   <small id="emailHelp" class="form-text text-muted">Vous ne voyez pas votre serveur ? <a href="https://discord.com/api/oauth2/authorize?client_id=996358104864276531&permissions=8&scope=bot%20applications.commands" target="_blank" rel="noopener noreferrer" )">Inviter le bot dessus.</a></small>
+   <div class=mb-3">
+     <label for="description" class="form-label">Nom affiché: </label>
+     <input type="input" class="form-control" id="name" name="name" placeholder="">
+   </div>
+   <div class="mb-3">
+     <label for="description" class="form-label">Description: </label>
+     <textarea class="form-control" id="description" rows=5 name="description" placeholder="Maximum 255 caractères"></textarea>
+   </div>
+   <div class="mb-3">
+     <label for="description" class="form-label">Code d'invitation au serveur: </label>
+     <div class="input-group">
+       <div class="input-group-text">https://discord.gg/</div>
+       <input type="text" class="form-control" id="code" name="code" placeholder="Code ">
+     </div>
+   </div>
+   <div class="form-check">
+     <input class="form-check-input" type="checkbox" name="like" id="like" checked>
+     <label class="form-check-label" for="like">
+       Liker a la création
+     </label>
+   </div>
+  <button type="submit" class="btn btn-success">Ajouter</button>
+</form>
+<%- include('../../partials/footer') -%>
