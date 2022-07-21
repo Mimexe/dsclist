@@ -94,6 +94,9 @@ async function events() {
   });
 }
 
+let attempt = 0;
+let failed = false;
+
 async function connectMySQL() {
   return await new Promise((resolve, reject) => {
     const db = mysql.createConnection({
@@ -103,11 +106,44 @@ async function connectMySQL() {
       port: config.mysql.port,
       database: config.mysql.database,
     });
-    db.connect(function (err) {
-      if (err) return reject(err);
+    db.connect(async function (err) {
+      if (err) {
+        failed = true;
+        if (err.code == "ECONNREFUSED") {
+          if (attempt > 2) {
+            logger.warn("Aborting.", "MySQL");
+            await client.summary.show();
+          } else {
+            setTimeout(() => {
+              logger.warn("Attempting to reconnect to MySQL", "MySQL");
+              connectMySQL();
+            }, 2000);
+            attempt++;
+            return reject(
+              new Error("MySQL connection refused. (" + attempt + " attempt)")
+            );
+          }
+        }
+        reject(new Error(err));
+        return;
+      }
+      attempt = 0;
       logger.success("Connected to MySQL", "MySQL");
       resolve(db);
       client.database = db;
+      if (failed) await client.summary.show();
+    });
+    db.on("error", async (err) => {
+      if (err.code === "PROTOCOL_CONNECTION_LOST") {
+        client.database = "failed";
+        failed = true;
+        logger.error("Lost connection to MySQL", "MySQL");
+        await client.summary.show();
+        setTimeout(() => {
+          logger.warn("Attempting to reconnect to MySQL", "MySQL");
+          connectMySQL();
+        }, 2000);
+      }
     });
   });
 }
@@ -134,40 +170,57 @@ client.on("ready", async (client) => {
   await connectMySQL().catch((err) => {
     logger.error("Error connecting to MySQL: " + err.stack, "MySQL");
     data.mysql = "❌";
+    client.database = "failed";
   });
 
   logger.success(`${client.user.tag} is online!`, "Bot");
   client.user.setActivity(devmode ? "Developpement" : "dsclist.ga");
   client.user.setStatus(devmode ? "dnd" : "online");
 
-  await require("util").promisify(setTimeout)(1000);
-  let end = Date.now();
-  let finalData = [
-    ["Name", "Status"],
-    ["MySQL", data.mysql],
-    ["Commands", data.commands],
-    ["Events", data.events],
-    ["Dashboard", data.dashboard],
-    ["Started in", `${(end - start) / 1000}s`],
-  ];
-  if (
-    data.mysql === "✅" &&
-    data.commands === "✅" &&
-    data.events === "✅" &&
-    data.dashboard === "✅"
-  ) {
-    console.log(
-      table(finalData, {
-        header: { content: "Summary", alignment: "center" },
-      }).green.bold
-    );
-  } else {
-    console.log(
-      table(finalData, {
-        header: { content: "Summary", alignment: "center" },
-      }).red.bold
-    );
-  }
+  client.summary = {
+    show: async (a) => {
+      if (!a) logger.info("Update detected, showing summary.", "Summary");
+      await require("util").promisify(setTimeout)(1000);
+      let end = Date.now();
+      if (client.database === "failed") data.mysql = "❌";
+      else data.mysql = "✅";
+      let finalData = [
+        ["Name", "Status"],
+        ["MySQL", data.mysql],
+        ["Commands", data.commands],
+        ["Events", data.events],
+        ["Dashboard", data.dashboard],
+        ["Started in", `${(end - start) / 1000}s`],
+      ];
+      if (
+        data.mysql === "✅" &&
+        data.commands === "✅" &&
+        data.events === "✅" &&
+        data.dashboard === "✅"
+      ) {
+        console.log(
+          table(finalData, {
+            header: {
+              content: a ? "Summary" : "Summary Update",
+              alignment: "center",
+            },
+          }).green.bold
+        );
+      } else {
+        console.log(
+          table(finalData, {
+            header: {
+              content: a ? "Summary" : "Summary Update",
+              alignment: "center",
+            },
+          }).red.bold
+        );
+      }
+    },
+    data,
+  };
+  await client.summary.show(true);
+  logger.info("All done !");
 });
 
 let started = false;
@@ -178,6 +231,10 @@ process.on("SIGINT", async () => {
     if (started) return;
     started = true;
     if (!client.isReady()) {
+      if (client === "failed") {
+        logger.error("Client failed to start, Aborting.", "Bot");
+        return;
+      }
       logger.error("Waiting for the bot to be ready.");
       await new Promise((resolve) => {
         client.on("ready", () => {
@@ -188,6 +245,10 @@ process.on("SIGINT", async () => {
     }
     if (!client.dashboard) {
       logger.error("Waiting for the dashboard to be ready.");
+      if (client.dashboard === "failed") {
+        logger.error("Dashboard failed to start, Aborting.", "Bot");
+        return;
+      }
       await new Promise((resolve, r) => {
         const timeout = setTimeout(() => {
           r(new Error("Timeout"));
@@ -203,6 +264,10 @@ process.on("SIGINT", async () => {
     }
     if (!client.database) {
       logger.error("Waiting for the database to be ready.");
+      if (client.database === "failed") {
+        logger.error("Database failed to start, Aborting.", "Bot");
+        return;
+      }
       await new Promise((resolve, r) => {
         const timeout = setTimeout(() => {
           r(new Error("Timeout"));
@@ -217,7 +282,7 @@ process.on("SIGINT", async () => {
       logger.info("Database is ready, shutting down");
     }
     setTimeout(() => {
-      logger.error("Timeout, force stopping", "Bot");
+      logger.error(new Error("Timeout, force stopping").stack, "Bot");
       process.exit(1);
     }, 60000);
     let i = 58;
@@ -236,22 +301,34 @@ process.on("SIGINT", async () => {
       type: "PLAYING",
     });
 
-    await new Promise((resolve) => {
+    await new Promise((resolve, r) => {
+      if (client.dashboard == "failed") {
+        logger.error("Dashboard failed, aborting.");
+        return r();
+      }
       client.dashboard.closeAllConnections();
       client.dashboard.close(() => {
         logger.warn("Dashboard closed", "Dashboard");
         resolve();
       });
-    });
-    await new Promise((resolve) => {
+    }).catch(() => {});
+    await new Promise((resolve, r) => {
+      if (client.database == "failed") {
+        logger.error("Database failed, aborting.");
+        return r();
+      }
       client.database.end(() => {
         logger.warn("MySQL closed.", "MySQL");
         resolve();
       });
-    });
+    }).catch(() => {});
 
     await new Promise((resolve) => setTimeout(resolve, 350));
-    await new Promise((resolve) => {
+    await new Promise((resolve, r) => {
+      if (client == "failed") {
+        logger.error("Client failed, aborting.");
+        return r();
+      }
       client.on("shardDisconnect", (a, b) => {
         resolve();
       });
